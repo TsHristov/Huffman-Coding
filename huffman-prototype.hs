@@ -1,23 +1,15 @@
 import Data.List as List (sortBy, nub)
 import qualified Data.Map as Map
 
-type Input = [(Char, Int)]
-type Code  = String
-type CharFrequency = (Char, Int)
-type HuffmanTree   = BinaryTree CharFrequency
+type Code            = String
+type CharFrequency   = (Char, Int)
+type CharFrequencies = [CharFrequency]
+type HuffmanTree     = BinaryTree CharFrequency
 
 data BinaryTree a = EmptyTree | Node { root  :: a,
                                        left  :: (BinaryTree a),
                                        right :: (BinaryTree a)
                                       } deriving (Show, Eq)
-
-instance Functor BinaryTree where
-  fmap f EmptyTree = EmptyTree
-  fmap f (Node root left right) = Node (f root) (fmap f left) (fmap f right)
-
-instance Foldable BinaryTree where
-  foldr f z EmptyTree = z
-  foldr f z (Node root left right) = foldr f (f root (foldr f z right)) left
 
 makeLeaf ::  CharFrequency -> HuffmanTree
 makeLeaf root = (Node root EmptyTree EmptyTree)
@@ -30,67 +22,71 @@ emptyTree :: HuffmanTree -> Bool
 emptyTree EmptyTree = True
 emptyTree         _ = False
 
-makeTree :: CharFrequency -> HuffmanTree -> HuffmanTree -> HuffmanTree
-makeTree root left right = Node root left right
-
+-- Get character associated with root:
 char :: HuffmanTree -> Char
 char = fst . root
 
+-- Get frequency associated with root:
 frequency :: HuffmanTree -> Int
 frequency = snd . root
 
+-- Define sorting over Huffman Trees based on their char frequencies:
 charFrequency :: HuffmanTree -> HuffmanTree -> Ordering
 charFrequency (Node (_, x) _ _) (Node (_, y) _ _)
   | x < y     = LT
   | x > y     = GT
   | otherwise = EQ
 
+-- Obtain file`s characters` frequencies:
+-- Example: contentsFrequency "abracadabra" -> [('a',5),('b',2),('r',2),('c',1),('d',1)]
 contentsFrequency :: String -> [CharFrequency]
 contentsFrequency contents = nub $ map (\x -> (x, count x contents)) contents
   where count x l = sum $ map (\y -> if y == x then 1 else 0) l
 
 -- Make each (Char,Frequency) pair a leaf in the Huffman Tree:
-leaves :: Input -> [HuffmanTree]
+leaves :: CharFrequencies -> [HuffmanTree]
 leaves = map (\(x,y) -> makeLeaf (x, y))
 
 -- Merge two trees together, so that their frequencies sum up:
 merge :: HuffmanTree -> HuffmanTree -> HuffmanTree
-merge left right = makeTree (' ', frequenciesSum) left right
+merge left right = Node (' ', frequenciesSum) left right
   where frequenciesSum = frequency left + frequency right
 
--- Encode the data into a Huffman Tree:
-code :: Input -> HuffmanTree
-code input  = encode (leaves input)
-  where encode []     = EmptyTree
-        encode [tree] = tree
-        encode input  = encode added
+-- Construct HuffmanTree based on file`s unique characters and their respective frequencies:
+constructHuffmanTree :: CharFrequencies -> HuffmanTree
+constructHuffmanTree input  = charsToTree (leaves input)
+  where charsToTree []      = EmptyTree
+        charsToTree [tree]  = tree
+        charsToTree input   = charsToTree added
           where sorted      = sortBy charFrequency input 
                 smallestTwo = take 2 sorted 
                 merged      = merge (head smallestTwo) (head $ tail smallestTwo)
                 removed     = filter (\x -> x /= (head smallestTwo) && x /= (head $ tail smallestTwo)) sorted
                 added       = merged : removed
 
--- Map chars to their respective unique codes in the tree:
-charCodes :: HuffmanTree -> [(Char, Code)]
-charCodes huffmanTree = generateCodes huffmanTree ""
+-- Generate unique binary indentification codes per file`s unique characters:
+binaryCodes :: HuffmanTree -> [(Char, Code)]
+binaryCodes huffmanTree = generateCodes huffmanTree ""
   where generateCodes huffmanTree path
           | isLeaf huffmanTree = [(char huffmanTree, path)]
           | otherwise          = generateCodes (left huffmanTree) (path ++ "0")
                                  ++ generateCodes (right huffmanTree) (path ++ "1")
 
--- Encoded original input:
-encodeContents :: String -> Code
-encodeContents text       = encoded
-  where codes             = Map.fromList $ charCodes $ code $ contentsFrequency text
-        encoded           = concat $ Prelude.map (\char -> getValue (Map.lookup char codes)) text
+-- Transform file`s contents to encoded sequence of 1`s and 0`s (Huffman Algorithm):
+-- Example: encodeContents "abracadabra" -> ("01111001100011010111100", <tree>),
+--          where <tree> is a valid Huffman Tree.
+encode :: String -> (Code, HuffmanTree)
+encode content            = (encoded content, huffmanTree)
+  where codes             = Map.fromList $ binaryCodes $ huffmanTree
+        encoded           = concat . Prelude.map (\char -> getValue (Map.lookup char codes))
+        huffmanTree       = constructHuffmanTree $ contentsFrequency content
         getValue (Just a) = a
 
-decode :: Code -> HuffmanTree -> String
-decode code huf = helper code huf
-  where helper (x:xs) tree
-          | isLeaf tree = (char tree) : helper xs huf
-          | emptyTree tree = ""
-          | x == '0'   = helper xs (left tree)
-          | x == '1'   = helper xs (right tree)
-
-  
+-- Decode a Huffman Tree in order to obtain file`s initial contents:
+decode :: (Code, HuffmanTree) -> String
+decode (code, huffmanTree) = decodeTree code huffmanTree
+  where decodeTree "" _ = ""
+        decodeTree code@(x:xs) tree
+          | isLeaf tree    = char tree : decodeTree xs huffmanTree
+          | x == '0'       = decodeTree xs (left tree)
+          | x == '1'       = decodeTree xs (right tree)
