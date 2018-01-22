@@ -85,8 +85,11 @@ encode content            = (encoded content, huffmanTree)
 -- Decode a Huffman Tree in order to obtain file`s initial contents:
 decode :: (Code, HuffmanTree) -> String
 decode (code, huffmanTree) = decodeTree code huffmanTree
-  where decodeTree "" _ = ""
-        decodeTree code@(x:xs) tree
-          | isLeaf tree    = char tree : decodeTree xs huffmanTree
-          | x == '0'       = decodeTree xs (left tree)
-          | x == '1'       = decodeTree xs (right tree)
+  where decodeTree "" _             = ""
+        decodeTree code@(x:xs) tree =
+          case x of '0' -> if isLeaf tree
+                           then char tree : decodeTree code huffmanTree
+                           else decodeTree xs (left tree)
+                    '1' -> if isLeaf tree
+                           then char tree : decodeTree code huffmanTree
+                           else decodeTree xs (right tree)
