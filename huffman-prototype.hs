@@ -1,3 +1,4 @@
+import System.IO
 import Data.List as List (sortBy, nub)
 import qualified Data.Map as Map
 
@@ -85,7 +86,7 @@ encode content            = (encoded content, huffmanTree)
 -- Decode a Huffman Tree in order to obtain file`s initial contents:
 decode :: (Code, HuffmanTree) -> String
 decode (code, huffmanTree) = decodeTree code huffmanTree
-  where decodeTree "" _             = ""
+  where decodeTree [x] tree   = if x == '0' then [char $ left tree] else [char $ right tree]
         decodeTree code@(x:xs) tree =
           case x of '0' -> if isLeaf tree
                            then char tree : decodeTree code huffmanTree
@@ -93,3 +94,16 @@ decode (code, huffmanTree) = decodeTree code huffmanTree
                     '1' -> if isLeaf tree
                            then char tree : decodeTree code huffmanTree
                            else decodeTree xs (right tree)
+
+main = do
+  file <- getLine
+  contents <- readFile file
+  let encoded = encode contents
+  putStr "Original contents: "
+  putStrLn $ contents
+  putStr "Characters binary codes: "
+  putStrLn $ show $ binaryCodes (snd encoded)
+  putStr "Encoded contents: "
+  putStrLn $ fst encoded
+  putStr "Decoded original contents: "
+  putStrLn $ decode encoded
