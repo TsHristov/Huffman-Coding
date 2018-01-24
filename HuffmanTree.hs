@@ -1,16 +1,17 @@
-import System.IO
+module HuffmanTree ( encode, decode) where
+
 import Data.List as List (sortBy, nub)
 import qualified Data.Map as Map
+
+data BinaryTree a = EmptyTree | Node { root  :: a,
+                                       left  :: (BinaryTree a),
+                                       right :: (BinaryTree a)
+                                     } deriving (Show, Eq)
 
 type Code            = String
 type CharFrequency   = (Char, Int)
 type CharFrequencies = [CharFrequency]
 type HuffmanTree     = BinaryTree CharFrequency
-
-data BinaryTree a = EmptyTree | Node { root  :: a,
-                                       left  :: (BinaryTree a),
-                                       right :: (BinaryTree a)
-                                      } deriving (Show, Eq)
 
 makeLeaf ::  CharFrequency -> HuffmanTree
 makeLeaf root = (Node root EmptyTree EmptyTree)
@@ -94,16 +95,3 @@ decode (code, huffmanTree) = decodeTree code huffmanTree
                     '1' -> if isLeaf tree
                            then char tree : decodeTree code huffmanTree
                            else decodeTree xs (right tree)
-
-main = do
-  file <- getLine
-  contents <- readFile file
-  let encoded = encode contents
-  putStr "Original contents: "
-  putStrLn $ contents
-  putStr "Characters binary codes: "
-  putStrLn $ show $ binaryCodes (snd encoded)
-  putStr "Encoded contents: "
-  putStrLn $ fst encoded
-  putStr "Decoded original contents: "
-  putStrLn $ decode encoded
