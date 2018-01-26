@@ -46,25 +46,28 @@ contentsFrequency contents = nub $ map (\x -> (x, count x contents)) contents
   where count x l = sum $ map (\y -> if y == x then 1 else 0) l
 
 -- Make each (Char,Frequency) pair a leaf in the Huffman Tree:
-leaves :: CharFrequencies -> [HuffmanTree]
-leaves = map (\(x,y) -> makeLeaf (x, y))
+makeLeaves :: CharFrequencies -> [HuffmanTree]
+makeLeaves = map (\(x,y) -> makeLeaf (x, y))
 
 -- Merge two trees together, so that their frequencies sum up:
-merge :: HuffmanTree -> HuffmanTree -> HuffmanTree
-merge left right = Node (' ', frequenciesSum) left right
+mergeTrees :: HuffmanTree -> HuffmanTree -> HuffmanTree
+mergeTrees  left right = Node (' ', frequenciesSum) left right
   where frequenciesSum = frequency left + frequency right
 
 -- Construct HuffmanTree based on file`s unique characters and their respective frequencies:
 constructHuffmanTree :: CharFrequencies -> HuffmanTree
-constructHuffmanTree input  = charsToTree (leaves input)
-  where charsToTree []      = EmptyTree
-        charsToTree [tree]  = tree
-        charsToTree input   = charsToTree added
-          where sorted      = sortBy charFrequency input 
-                smallestTwo = take 2 sorted 
-                merged      = merge (head smallestTwo) (head $ tail smallestTwo)
-                removed     = filter (\x -> x /= (head smallestTwo) && x /= (head $ tail smallestTwo)) sorted
-                added       = merged : removed
+constructHuffmanTree input    = construct $ makeLeaves input
+  where construct []          = EmptyTree
+        construct [tree]      = tree
+        construct input       = construct updated
+          where sorted        = sortBy charFrequency input 
+                smallestTrees = take 2 sorted 
+                rightTree     = head smallestTrees
+                leftTree      = head $ tail smallestTrees
+                merged        = mergeTrees rightTree leftTree
+                removed       = drop 2 sorted
+                updated       = merged : removed
+
 
 -- Generate unique binary indentification codes per file`s unique characters:
 binaryCodes :: HuffmanTree -> [(Char, Code)]
