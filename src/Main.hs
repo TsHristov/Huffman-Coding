@@ -1,6 +1,8 @@
-import System.IO
+module Main where
+
 import HuffmanTree
-                                
+
+main :: IO ()
 main = do
   putStrLn "Enter a file to compress: "
   file <- getLine

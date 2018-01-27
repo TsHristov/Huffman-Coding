@@ -1,5 +1,1 @@
 # Huffman-Coding
-
-
-
-	      

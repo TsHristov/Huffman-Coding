@@ -1,0 +1,23 @@
+name:                Huffman-Coding
+version:             0.1.0.0
+synopsis:            Huffman Coding Algorithm
+description:         Huffman Coding Algorithm
+homepage:            https://github.com/TsHristov/Huffman-Compression
+license:             BSD3
+license-file:        LICENSE
+author:              Tsvetan Hristov
+maintainer:          tsvetanhristov@yahoo.com
+copyright:           2018, Tsvetan Hristov
+category:            Basic
+build-type:          Simple
+cabal-version:       >=1.10
+extra-source-files:  README.md
+
+executable Huffman-Coding
+  ghc-options:         -Wall
+  hs-source-dirs:      src
+  main-is:             Main.hs
+  other-modules:       HuffmanTree
+  default-language:    Haskell2010
+  build-depends:       base >= 4.7 && < 5,
+                       containers
