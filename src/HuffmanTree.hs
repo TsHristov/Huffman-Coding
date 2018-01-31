@@ -1,6 +1,7 @@
 module HuffmanTree ( encode, decode) where
 
 import Data.List as List (sortBy, nub)
+import qualified Data.Binary as Binary
 import qualified Data.Map as Map
 
 type Code            = String
@@ -11,6 +12,23 @@ data HuffmanTree = EmptyTree | Node { root  :: CharFrequency,
                                       left  :: HuffmanTree,
                                       right :: HuffmanTree
                                     } deriving (Show, Eq)
+
+
+instance Binary.Binary HuffmanTree where
+  put EmptyTree = do Binary.put (0 :: Binary.Word8)
+                     Binary.put EmptyTree
+  put (Node root left right) = do Binary.put (1 :: Binary.Word8)
+                                  Binary.put root
+                                  Binary.put left
+                                  Binary.put right
+  get = do t <- Binary.get :: Binary.Get Binary.Word8
+           case t of
+             0 -> do (Binary.get :: Binary.Get Binary.Word8)
+                     return EmptyTree
+             1 -> do root <- Binary.get
+                     left <- Binary.get
+                     right <- Binary.get
+                     return (Node root left right)
 
 makeLeaf ::  CharFrequency -> HuffmanTree
 makeLeaf x = (Node x EmptyTree EmptyTree)
