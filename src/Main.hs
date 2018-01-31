@@ -9,7 +9,7 @@ main = do
   contents <- readFile file
   let encoded = encode contents
   putStrLn "Original contents: "
-  putStrLn $ contents
+  putStrLn contents
   putStr "Encoded contents: "
   putStrLn $ fst encoded
   putStr "Decoded original contents: "
