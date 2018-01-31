@@ -13,18 +13,20 @@ data HuffmanTree = EmptyTree | Node { root  :: CharFrequency,
                                       right :: HuffmanTree
                                     } deriving (Show, Eq)
 
+-- | Make HuffmanTree an instance of Ord, so we can sort trees based on char frequencies:
+instance Ord HuffmanTree where
+  compare (Node (_,x) _ _) (Node (_,y) _ _) = compare x y
 
+-- | Make HuffmanTree an instance of Binary, so it can be serialized:
 instance Binary.Binary HuffmanTree where
   put EmptyTree = do Binary.put (0 :: Binary.Word8)
-                     Binary.put EmptyTree
   put (Node root left right) = do Binary.put (1 :: Binary.Word8)
                                   Binary.put root
                                   Binary.put left
                                   Binary.put right
   get = do t <- Binary.get :: Binary.Get Binary.Word8
            case t of
-             0 -> do (Binary.get :: Binary.Get Binary.Word8)
-                     return EmptyTree
+             0 -> do return EmptyTree
              1 -> do root <- Binary.get
                      left <- Binary.get
                      right <- Binary.get
@@ -45,18 +47,11 @@ char = fst . root
 frequency :: HuffmanTree -> Int
 frequency = snd . root
 
--- | Define sorting over Huffman Trees based on their char frequencies:
-charFrequency :: HuffmanTree -> HuffmanTree -> Ordering
-charFrequency (Node (_, x) _ _) (Node (_, y) _ _)
-  | x < y     = LT
-  | x > y     = GT
-  | otherwise = EQ
-
 -- | Obtain file`s characters` frequencies:
 -- | Example: contentsFrequency "abracadabra" -> [('a',5),('b',2),('r',2),('c',1),('d',1)]
 contentsFrequencies :: String -> [CharFrequency]
 contentsFrequencies contents = nub $ map (\x -> (x, (count x contents))) contents
-  where count x              = sum . map (\y -> if y == x then 1 else 0) 
+  where count x              = foldl (\acc y -> if y == x then acc + 1 else 0) 0 
 
 -- | Make each (Char,Frequency) pair a leaf in the Huffman Tree:
 makeLeaves :: CharFrequencies -> [HuffmanTree]
@@ -73,7 +68,7 @@ constructHuffmanTree          = construct . makeLeaves
   where construct []          = EmptyTree
         construct [tree]      = tree
         construct tree        = construct updated
-          where sorted        = sortBy charFrequency tree 
+          where sorted        = sortBy compare tree 
                 smallestTrees = take 2 sorted 
                 rightTree     = head smallestTrees
                 leftTree      = head $ tail smallestTrees
