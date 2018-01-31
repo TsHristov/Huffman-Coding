@@ -1,6 +1,6 @@
 module HuffmanTree ( encode, decode) where
 
-import Data.List as List (sortBy, nub)
+import Data.List as List (sortBy, nub, foldl')
 import qualified Data.Binary as Binary
 import qualified Data.Map as Map
 
@@ -51,7 +51,7 @@ frequency = snd . root
 -- | Example: contentsFrequency "abracadabra" -> [('a',5),('b',2),('r',2),('c',1),('d',1)]
 contentsFrequencies :: String -> [CharFrequency]
 contentsFrequencies contents = nub $ map (\x -> (x, (count x contents))) contents
-  where count x              = foldl (\acc y -> if y == x then acc + 1 else 0) 0 
+  where count x              = foldl' (\acc y -> if y == x then acc + 1 else 0) 0 
 
 -- | Make each (Char,Frequency) pair a leaf in the Huffman Tree:
 makeLeaves :: CharFrequencies -> [HuffmanTree]
