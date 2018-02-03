@@ -2,8 +2,6 @@
 
   _Idiomatic Haskell_ implementation of the classic Huffman Compression Algorithm.
   
-  This is an attempt to achieve the most Haskell-like solution, while keeping the code short and comprehensive.
-  
 ***
 
 ## Usage:
