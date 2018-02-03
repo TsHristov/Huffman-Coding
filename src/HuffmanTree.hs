@@ -1,4 +1,4 @@
-module HuffmanTree ( encode, decode) where
+module HuffmanTree where
 
 import Data.List as List (sortBy, nub, foldl')
 import qualified Data.Binary as Binary
@@ -12,6 +12,12 @@ data HuffmanTree = EmptyTree | Node { root  :: CharFrequency,
                                       left  :: HuffmanTree,
                                       right :: HuffmanTree
                                     } deriving (Show, Eq)
+
+serialize :: (Code, HuffmanTree) -> FilePath -> IO ()
+serialize (code,tree) file = Binary.encodeFile (file ++ ".huffman") (code,tree)
+
+deserialize :: Binary.Binary a => FilePath -> IO a
+deserialize file = do Binary.decodeFile (file ++ ".huffman")
 
 -- | Make HuffmanTree an instance of Ord, so we can sort trees based on char frequencies:
 instance Ord HuffmanTree where

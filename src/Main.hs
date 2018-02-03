@@ -8,10 +8,13 @@ main = do
   file <- getLine
   contents <- readFile file
   let encoded = encode contents
+  serialize encoded file
+  (code,tree) <- deserialize file :: IO (String, HuffmanTree)
   putStrLn "Original contents: "
   putStrLn contents
   putStr "Encoded contents: "
-  putStrLn $ fst encoded
+  putStrLn $ code
   putStr "Decoded original contents: "
-  putStrLn $ (decode encoded)
+  putStrLn $ (decode (code,tree))
+
 
